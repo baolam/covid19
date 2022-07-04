@@ -21,7 +21,7 @@ i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
 mlx = adafruit_mlx90640.MLX90640(i2c)
 mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_1_HZ
 
-mlx_interp_val = 15
+mlx_interp_val = 10
 mlx_shape = (24, 32)
 mlx_interp_shape = (mlx_shape[0] * mlx_interp_val, mlx_shape[1] * mlx_interp_val)
 
@@ -44,7 +44,7 @@ fig = plt.figure(figsize=(8, 6))
 fig.canvas.set_window_title("Giám sát nhiệt độ")
 fig.canvas.toolbar_visible = False
 
-ax1 = fig.add_subplot(1, 2, 1)
+ax1 = fig.add_subplot(1, 2, 1)                  
 ax2 = fig.add_subplot(1, 2, 2)
 
 fig.subplots_adjust(0.05, 0.05, 0.95, 0.95)
@@ -57,7 +57,7 @@ therm1 = ax1.imshow(
   vmax = 45
 )
 
-therm2 = ax1.imshow(
+therm2 = ax2.imshow(
   np.zeros(mlx_interp_shape),
   interpolation = 'none',
   cmap = plt.cm.bwr,
@@ -91,7 +91,7 @@ plt.ion()
 
 while True:
   img = vs.read()
-  img = imutils.resize(img, width = mlx_interp_shape[0], height = mlx_interp_shape[1])
+  img = imutils.resize(img, width = mlx_interp_shape[1], height = mlx_interp_shape[0])
   (locs, preds) = detect_and_predict_mask(img, faceNet, maskNet)
   
   for (box, pred) in zip(locs, preds):
@@ -106,15 +106,12 @@ while True:
     
     fig.canvas.restore_region(ax_background)
     
-    therm2.set_array(data_array)
+    therm2.set_array(xy)
     therm2.set_clim(vmin=vmin, vmax=vmax)
-    ax1.draw_artist(therm2)
+    ax2.draw_artist(therm2)
     
     cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)
-    therm1.set_data(
-      cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    )
-
+    
     msk = "Không"
     if has_mask:
       msk = "Có"
@@ -130,6 +127,10 @@ while True:
     if temperature > 38:
       bbox_setting["facecolor"] = "red"
     
+    
+    therm1.set_data(
+     cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    )
     ax1.text(250, -100, msg, bbox=bbox_setting)
     
     fig.canvas.blit(ax1.bbox)
