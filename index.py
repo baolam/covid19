@@ -80,18 +80,10 @@ def get_temp(x, y, w, h):
   
   data_array = ndimage.zoom(data_array, mlx_interp_val)
   return round(np.max(data_array[y:y+h, x:x+w]), 2), data_array, vmin, vmax
-  
-def _run_cli():
-  client.connect("http://192.168.1.20:3000", namespaces=NAMESPACES)
 
-threading.Thread(name="_run_cli", daemon=True, target=_run_cli) \
-  .start()
-
-plt.ion()
-
-while True:
-  img = vs.read()
-  img = imutils.resize(img, width = mlx_interp_shape[1], height = mlx_interp_shape[0])
+img = None
+def run_mask():
+  global img
   (locs, preds) = detect_and_predict_mask(img, faceNet, maskNet)
   
   for (box, pred) in zip(locs, preds):
@@ -126,8 +118,7 @@ while True:
     
     if temperature > 38:
       bbox_setting["facecolor"] = "red"
-    
-    
+        
     therm1.set_data(
      cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     )
@@ -138,7 +129,18 @@ while True:
     
     break
   
-  cv2.imshow("FACE", img)
+def _run_cli():
+  client.on("has_new_form", handler=run_mask, namespaces=NAMESPACES)
+  client.connect("http://192.168.1.20:3000", namespaces=NAMESPACES)
+
+threading.Thread(name="_run_cli", daemon=True, target=_run_cli) \
+  .start()
+
+plt.ion()
+
+while True:
+  img = vs.read()
+  img = imutils.resize(img, width = mlx_interp_shape[1], height = mlx_interp_shape[0])
     
   if cv2.waitKey(1) & 0xFF == ord('q'):
     plt.show()
