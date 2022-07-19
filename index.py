@@ -128,9 +128,9 @@ def run_mask():
     fig.canvas.flush_events()      
     
     break
-  
+
 def _run_cli():
-  client.on("has_new_form", handler=run_mask, namespaces=NAMESPACES)
+  # client.on("has_new_form", handler=run_mask, namespace=NAMESPACES)
   client.connect("http://192.168.1.20:3000", namespaces=NAMESPACES)
 
 threading.Thread(name="_run_cli", daemon=True, target=_run_cli) \
@@ -141,7 +141,10 @@ plt.ion()
 while True:
   img = vs.read()
   img = imutils.resize(img, width = mlx_interp_shape[1], height = mlx_interp_shape[0])
-    
+  
+  # Khẩu trang  
+  run_mask()
+      
   if cv2.waitKey(1) & 0xFF == ord('q'):
     plt.show()
     cv2.destroyAllWindows()
